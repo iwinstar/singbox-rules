@@ -1,4 +1,4 @@
-name: Convert rules to sing-box rule-set
+name: Convert rules
 on:
   workflow_dispatch:
   schedule:
@@ -8,6 +8,9 @@ on:
       - main
     paths-ignore:
       - "**/README.md"
+permissions:
+  contents: read
+  pull-requests: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +21,8 @@ jobs:
           repository: iwinstar/singbox-rules
           path: singbox-rules
           ref: main
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Checkout easymosdns
         uses: actions/checkout@v5
@@ -51,14 +56,17 @@ jobs:
           bash ./singbox-rules/scripts/convert_srs.sh ./sing-box ./singbox-rules/resources
           rm ./sing-box
 
-      - name: Git push assets
+      - name: Git Commit files
         run: |
-          cd singbox-rules || exit 1
-          git init
+          cd singbox-rules
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b main
           git add .
           git commit -m "Released on ${{ env.BUILDTIME }}"
-          git remote add origin "https://${{ github.actor }}:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f -u origin main
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          directory: singbox-rules
