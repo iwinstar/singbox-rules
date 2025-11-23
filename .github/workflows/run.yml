@@ -1,0 +1,64 @@
+name: Convert rules to sing-box rule-set
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 14 * * *" # 6:30 AM UTC+8
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**/README.md"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout singbox-rules
+        uses: actions/checkout@v5
+        with:
+          repository: iwinstar/singbox-rules
+          path: singbox-rules
+          ref: main
+
+      - name: Checkout easymosdns
+        uses: actions/checkout@v5
+        with:
+          repository: pmkol/easymosdns
+          path: easymosdns
+          ref: rules
+
+      - name: Checkout AWAvenue-Ads-Rule
+        uses: actions/checkout@v5
+        with:
+          repository: TG-Twilight/AWAvenue-Ads-Rule
+          path: AWAvenue-Ads-Rule
+          ref: main
+
+      - name: Convert json files
+        env:
+          NO_SKIP: true
+        run: |
+          mkdir -p ./singbox-rules/resources
+          python ./singbox-rules/scripts/convert_json.py ./easymosdns ./singbox-rules/resources
+          cp ./AWAvenue-Ads-Rule/Filters/AWAvenue-Ads-Rule-Singbox.json ./singbox-rules/resources
+
+      - name: Convert srs files
+        env:
+          NO_SKIP: true
+        run: |
+          wget -q --show-progress https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz sing-box-1.12.12-linux-amd64/sing-box --strip-components 1
+          chmod 755 sing-box
+          ./sing-box version
+          bash ./singbox-rules/scripts/convert_srs.sh ./sing-box ./singbox-rules/resources
+          rm ./sing-box
+
+      - name: Git push assets
+        run: |
+          cd singbox-rules || exit 1
+          git init
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b main
+          git add .
+          git commit -m "Released on ${{ env.BUILDTIME }}"
+          git remote add origin "https://${{ github.actor }}:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f -u origin main
