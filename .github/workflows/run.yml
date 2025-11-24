@@ -60,12 +60,16 @@ jobs:
       - name: Git Commit files
         run: |
           cd singbox-rules
-          git status
+
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --exit-code || git commit -m "Released on ${{ env.BUILD_TIME }}"
 
+          if git diff --exit-code; then
+            echo "No changes to commit."
+          else
+            git add .
+            git commit -m "Released on ${{ env.BUILD_TIME }}"
+          fi
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
