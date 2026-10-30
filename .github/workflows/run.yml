@@ -17,7 +17,7 @@ jobs:
           echo "BUILD_TIME=$(date --rfc-3339=seconds)" >> ${GITHUB_ENV}
 
       - name: Checkout singbox-rules
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: iwinstar/singbox-rules
           path: singbox-rules
@@ -26,14 +26,14 @@ jobs:
           fetch-depth: 0
 
       - name: Checkout easymosdns
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: pmkol/easymosdns
           path: easymosdns
           ref: rules
 
       - name: Checkout AWAvenue-Ads-Rule
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: TG-Twilight/AWAvenue-Ads-Rule
           path: AWAvenue-Ads-Rule
