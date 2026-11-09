@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Setup build time
         run: |
@@ -47,28 +49,19 @@ jobs:
 
       - name: Convert srs files
         run: |
-          wget -q https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz sing-box-1.12.12-linux-amd64/sing-box --strip-components 1
+          wget -q https://github.com/SagerNet/sing-box/releases/download/v1.13.21/sing-box-1.13.21-linux-amd64.tar.gz -O sing-box.tar.gz && tar zxvf sing-box.tar.gz sing-box-1.13.21-linux-amd64/sing-box --strip-components 1
           chmod 755 sing-box
           ./sing-box version
           bash ./singbox-rules/scripts/convert_srs.sh ./sing-box ./singbox-rules/resources
           rm ./sing-box
 
-      - name: Git Commit files
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          cd singbox-rules
-          git status
+          gh release view latest >/dev/null 2>&1 || \
+            gh release create latest --title "Rules" --notes "Auto-generated rules"
+          gh release upload latest ./singbox-rules/resources/* --clobber
+          gh release edit latest --notes "Updated on ${{ env.BUILD_TIME }}"
 
-          if [[ -n $(git status --porcelain) ]]; then
-            git config --local user.name "github-actions[bot]"
-            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add .
-            git commit -m "Released on ${{ env.BUILD_TIME }}"
-          else
-            echo "No changes to commit."
-          fi
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-          directory: singbox-rules
