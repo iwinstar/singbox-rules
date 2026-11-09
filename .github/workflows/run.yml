@@ -1,4 +1,4 @@
-name: Convert rules
+name: Convert
 on:
   workflow_dispatch:
   schedule:
@@ -11,8 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Setup build time
         run: |
@@ -55,13 +53,16 @@ jobs:
           bash ./singbox-rules/scripts/convert_srs.sh ./sing-box ./singbox-rules/resources
           rm ./sing-box
 
-      - name: Upload to release
+      - name: Force push to rules branch
+        working-directory: singbox-rules/resources
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
         run: |
-          gh release view latest >/dev/null 2>&1 || \
-            gh release create latest --title "Rules" --notes "Auto-generated rules"
-          gh release upload latest ./singbox-rules/resources/* --clobber
-          gh release edit latest --notes "Updated on ${{ env.BUILD_TIME }}"
+          git init -b rules
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Released on ${BUILD_TIME}"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git push -f origin rules
 
