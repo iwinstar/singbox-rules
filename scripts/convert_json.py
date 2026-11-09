@@ -25,13 +25,13 @@ def assemble_rules(src_file: str):
     if "_ip_" in src_file:
         rule_key = "ip_cidr"
     else:
-        rule_key = "domain"
+        rule_key = "domain_suffix"
 
     content = {
         "version": 3, 
         "rules": [{
             "ip_cidr": [],
-            "domain": [],
+            "domain_suffix": [],
             "domain_regex": []
         }]
     }
@@ -46,7 +46,7 @@ def assemble_rules(src_file: str):
                 if mark == "regexp":
                     rule_key = "domain_regex"
                 else:
-                    rule_key = "domain"
+                    rule_key = "domain_suffix"
 
             content['rules'][0][rule_key].append(line)
 
