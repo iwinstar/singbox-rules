@@ -43,7 +43,7 @@ jobs:
         run: |
           mkdir -p ./singbox-rules/resources
           python ./singbox-rules/scripts/convert_json.py ./easymosdns ./singbox-rules/resources
-          cp ./AWAvenue-Ads-Rule/Filters/AWAvenue-Ads-Rule-Singbox.json ./singbox-rules/resources
+          cp ./AWAvenue-Ads-Rule/Filters/AWAvenue-Ads-Rule-Singbox*.json ./singbox-rules/resources
 
       - name: Convert srs files
         run: |
